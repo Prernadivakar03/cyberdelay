@@ -23,6 +23,8 @@ Then open **http://127.0.0.1:8000/**
 
 Admin panel: http://127.0.0.1:8000/admin/ → `admin` / `admin123`
 
+Live Demo: https://cyberdelay.onrender.com/
+
 ---
 
 ## Manual Setup (if setup.py fails)
