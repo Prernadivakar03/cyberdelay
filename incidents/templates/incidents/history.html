@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Incident History{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="section-tag">// Incident Log</div>
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <h2 style="font-family: var(--cd-mono); font-weight: 700; margin: 0;">All Incidents</h2>
+        <a href="/submit/" class="btn btn-cyber" style="font-size: 0.8rem; padding: 0.4rem 1.2rem;">
+            <i class="bi bi-plus me-1"></i>New Incident
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="cd-card p-3 mb-4">
+        <form method="GET" class="d-flex align-items-center gap-3 flex-wrap">
+            <div style="font-family: var(--cd-mono); font-size: 0.72rem; color: var(--cd-muted); text-transform: uppercase; letter-spacing: 0.1em;">Filter:</div>
+            <select name="attack_type" class="form-select" style="width: auto; font-size: 0.82rem;">
+                <option value="">All Attack Types</option>
+                {% for val, label in attack_types %}
+                    <option value="{{ val }}" {% if attack_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select name="risk_level" class="form-select" style="width: auto; font-size: 0.82rem;">
+                <option value="">All Risk Levels</option>
+                {% for val, label in risk_levels %}
+                    <option value="{{ val }}" {% if risk_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-cyber" style="font-size: 0.8rem; padding: 0.4rem 1rem;">Apply</button>
+            {% if attack_filter or risk_filter %}
+            <a href="/history/" class="btn" style="font-size: 0.8rem; color: var(--cd-muted); padding: 0.4rem 0.8rem;">✕ Clear</a>
+            {% endif %}
+            <span style="font-family: var(--cd-mono); font-size: 0.75rem; color: var(--cd-muted); margin-left: auto;">
+                {{ total }} record{{ total|pluralize }}
+            </span>
+        </form>
+    </div>
+
+    <!-- Table -->
+    {% if incidents %}
+    <div class="cd-card">
+        <div class="table-responsive">
+            <table class="table cd-table mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Attack Type</th>
+                        <th>Delay (min)</th>
+                        <th>Server Load</th>
+                        <th>Patch</th>
+                        <th>Firewall</th>
+                        <th>Systems</th>
+                        <th>Damage</th>
+                        <th>Counterfactual</th>
+                        <th>Saved</th>
+                        <th>Risk</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incidents %}
+                    <tr>
+                        <td style="color: var(--cd-muted);">{{ inc.pk }}</td>
+                        <td>
+                            <a href="/result/{{ inc.pk }}/" style="color: var(--cd-text); text-decoration: none; font-weight: 600;">
+                                {{ inc.get_attack_type_display }}
+                            </a>
+                        </td>
+                        <td>
+                            <span style="color: {% if inc.detection_delay > 60 %}var(--cd-red){% elif inc.detection_delay > 20 %}var(--cd-yellow){% else %}var(--cd-green){% endif %};">
+                                {{ inc.detection_delay }}
+                            </span>
+                        </td>
+                        <td style="color: var(--cd-muted);">{{ inc.server_load }}%</td>
+                        <td>
+                            <span style="font-size: 0.72rem; color: {% if inc.patch_status == 'patched' %}var(--cd-green){% elif inc.patch_status == 'partial' %}var(--cd-yellow){% else %}var(--cd-red){% endif %};">
+                                {{ inc.get_patch_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.72rem; color: {% if inc.firewall_status == 'strong' %}var(--cd-green){% elif inc.firewall_status == 'moderate' %}var(--cd-yellow){% else %}var(--cd-red){% endif %};">
+                                {{ inc.get_firewall_status_display }}
+                            </span>
+                        </td>
+                        <td style="color: var(--cd-muted);">{{ inc.affected_systems }}</td>
+                        <td>
+                            <span style="font-weight: 700; color: {% if inc.damage_score >= 75 %}var(--cd-red){% elif inc.damage_score >= 55 %}var(--cd-orange){% elif inc.damage_score >= 30 %}var(--cd-yellow){% else %}var(--cd-green){% endif %};">
+                                {{ inc.damage_score }}
+                            </span>
+                        </td>
+                        <td style="color: var(--cd-green);">{{ inc.counterfactual_damage }}</td>
+                        <td>
+                            {% if inc.damage_saved %}
+                            <span style="color: #a78bfa; font-weight: 600;">-{{ inc.damage_saved }}</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td><span class="risk-badge risk-{{ inc.risk_level }}">{{ inc.risk_level }}</span></td>
+                        <td style="color: var(--cd-muted); white-space: nowrap;">{{ inc.created_at|date:"d M Y" }}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="/result/{{ inc.pk }}/" class="btn btn-sm" style="color: var(--cd-accent); padding: 0.2rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--cd-border); border-radius: 3px;">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="POST" action="/delete/{{ inc.pk }}/" style="display:inline;" onsubmit="return confirm('Delete this incident?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm" style="color: var(--cd-red); padding: 0.2rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--cd-border); border-radius: 3px; background: none;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="cd-card p-5 text-center">
+        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--cd-muted); display: block; margin-bottom: 1rem;"></i>
+        <div style="font-family: var(--cd-mono); color: var(--cd-muted); margin-bottom: 1rem;">
+            {% if attack_filter or risk_filter %}
+            No incidents match the selected filters.
+            {% else %}
+            No incidents logged yet. Start by submitting your first incident.
+            {% endif %}
+        </div>
+        <a href="/submit/" class="btn btn-cyber">Log First Incident</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

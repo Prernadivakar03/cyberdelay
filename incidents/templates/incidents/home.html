@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <!-- Hero -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <!-- <div class="section-tag">// Research Project</div> -->
+            <h1 style="font-family: var(--cd-mono); font-size: 2.4rem; font-weight: 700; line-height: 1.2;">
+                <span style="color: var(--cd-accent);">CYBER</span>DELAY
+            </h1>
+            <h2 style="font-size: 1.1rem; color: var(--cd-muted); font-weight: 400; margin-bottom: 1.5rem;">
+                Cyberattack Detection Delay Impact Analysis Using Causal Inference
+            </h2>
+            <p style="color: #94a3b8; line-height: 1.8; max-width: 640px;">
+                Every minute a cyberattack goes undetected, damage compounds. CyberDelay uses
+                <strong style="color: var(--cd-text);">causal inference</strong> to quantify exactly how much
+                damage could have been prevented with faster detection — transforming raw incidents into
+                actionable security intelligence.
+            </p>
+            <div class="d-flex gap-3 mt-4">
+                <a href="/submit/" class="btn btn-cyber">
+                    <i class="bi bi-plus-circle me-2"></i>Submit Incident
+                </a>
+                <a href="/dashboard/" class="btn btn-outline-cyber">
+                    <i class="bi bi-bar-chart-line me-2"></i>View Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-flex align-items-center justify-content-center">
+            <div style="position: relative; width: 200px; height: 200px;">
+                <div style="position: absolute; inset: 0; border: 1px solid var(--cd-accent); border-radius: 50%; opacity: 0.3; animation: spin 20s linear infinite;"></div>
+                <div style="position: absolute; inset: 20px; border: 1px solid var(--cd-accent2); border-radius: 50%; opacity: 0.4; animation: spin 15s linear infinite reverse;"></div>
+                <div style="position: absolute; inset: 40px; border: 1px solid var(--cd-accent); border-radius: 50%; opacity: 0.2;"></div>
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-shield-exclamation" style="font-size: 3rem; color: var(--cd-accent);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="stat-card accent">
+                <div class="stat-value" style="color: var(--cd-accent);">{{ total_incidents }}</div>
+                <div class="stat-label">Total Incidents</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card danger">
+                <div class="stat-value" style="color: var(--cd-red);">{{ critical_count }}</div>
+                <div class="stat-label">Critical Cases</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-value" style="color: var(--cd-yellow);">{{ avg_damage }}</div>
+                <div class="stat-label">Avg Damage Score</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card success">
+                <div class="stat-value" style="color: var(--cd-green);">{{ avg_delay }}m</div>
+                <div class="stat-label">Avg Detection Delay</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Cards + Recent Incidents -->
+    <div class="row g-4">
+        <!-- Features -->
+        <div class="col-lg-7">
+            <div class="section-tag">// Core Modules</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="cd-card p-3 h-100">
+                        <div class="mb-2" style="color: var(--cd-accent); font-size: 1.5rem;"><i class="bi bi-calculator"></i></div>
+                        <div style="font-weight: 700; margin-bottom: 0.5rem;">Damage Score Engine</div>
+                        <div style="font-size: 0.83rem; color: var(--cd-muted);">
+                            Calculates a 0–100 damage score using attack severity, detection delay, patch status, firewall strength, server load, and data sensitivity.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cd-card p-3 h-100" style="border-color: rgba(124, 58, 237, 0.4);">
+                        <div class="mb-2" style="color: var(--cd-accent2); font-size: 1.5rem;"><i class="bi bi-arrow-left-right"></i></div>
+                        <div style="font-weight: 700; margin-bottom: 0.5rem;">Causal Comparison</div>
+                        <div style="font-size: 0.83rem; color: var(--cd-muted);">
+                            Counterfactual analysis: "What if we detected this 60% earlier?" — quantifies damage that could have been prevented.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cd-card p-3 h-100">
+                        <div class="mb-2" style="color: var(--cd-yellow); font-size: 1.5rem;"><i class="bi bi-tags"></i></div>
+                        <div style="font-weight: 700; margin-bottom: 0.5rem;">Risk Classification</div>
+                        <div style="font-size: 0.83rem; color: var(--cd-muted);">
+                            Automatically labels each incident: Low / Medium / High / Critical with targeted security recommendations.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cd-card p-3 h-100">
+                        <div class="mb-2" style="color: var(--cd-green); font-size: 1.5rem;"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div style="font-weight: 700; margin-bottom: 0.5rem;">Analytics Dashboard</div>
+                        <div style="font-size: 0.83rem; color: var(--cd-muted);">
+                            Interactive Chart.js visualizations: delay vs damage scatter, attack frequency, risk distribution, and trend timelines.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Incidents -->
+        <div class="col-lg-5">
+            <div class="section-tag">// Recent Incidents</div>
+            <div class="cd-card">
+                {% if recent_incidents %}
+                <div class="table-responsive">
+                    <table class="table cd-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Attack</th>
+                                <th>Delay</th>
+                                <th>Damage</th>
+                                <th>Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inc in recent_incidents %}
+                            <tr>
+                                <td>
+                                    <a href="/result/{{ inc.pk }}/" style="color: var(--cd-text); text-decoration: none;">
+                                        {{ inc.get_attack_type_display }}
+                                    </a>
+                                </td>
+                                <td style="color: var(--cd-muted);">{{ inc.detection_delay }}m</td>
+                                <td>
+                                    <span style="color: {% if inc.damage_score >= 75 %}var(--cd-red){% elif inc.damage_score >= 55 %}var(--cd-orange){% elif inc.damage_score >= 30 %}var(--cd-yellow){% else %}var(--cd-green){% endif %}; font-weight: 700;">
+                                        {{ inc.damage_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="risk-badge risk-{{ inc.risk_level }}">{{ inc.risk_level }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-2 text-center" style="border-top: 1px solid var(--cd-border);">
+                    <a href="/history/" style="font-family: var(--cd-mono); font-size: 0.75rem; color: var(--cd-accent);">
+                        View All Incidents →
+                    </a>
+                </div>
+                {% else %}
+                <div class="p-4 text-center" style="color: var(--cd-muted);">
+                    <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                    <div style="font-family: var(--cd-mono); font-size: 0.85rem;">No incidents logged yet.</div>
+                    <a href="/submit/" class="btn btn-cyber mt-3" style="font-size: 0.8rem; padding: 0.4rem 1rem;">
+                        Log First Incident
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- How it Works -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="section-tag">// How It Works</div>
+            <div class="cd-card p-4">
+                <div class="row g-0 text-center">
+                    {% for step in "12345" %}{% endfor %}
+                    <div class="col">
+                        <div style="width: 40px; height: 40px; background: rgba(0,212,255,0.1); border: 1px solid var(--cd-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-family: var(--cd-mono); color: var(--cd-accent); font-weight: 700;">1</div>
+                        <div style="font-size: 0.8rem; font-family: var(--cd-mono);">Enter Incident</div>
+                    </div>
+                    <div class="col d-flex align-items-center justify-content-center" style="color: var(--cd-border); font-size: 1.5rem;">→</div>
+                    <div class="col">
+                        <div style="width: 40px; height: 40px; background: rgba(0,212,255,0.1); border: 1px solid var(--cd-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-family: var(--cd-mono); color: var(--cd-accent); font-weight: 700;">2</div>
+                        <div style="font-size: 0.8rem; font-family: var(--cd-mono);">Calculate Damage</div>
+                    </div>
+                    <div class="col d-flex align-items-center justify-content-center" style="color: var(--cd-border); font-size: 1.5rem;">→</div>
+                    <div class="col">
+                        <div style="width: 40px; height: 40px; background: rgba(124,58,237,0.2); border: 1px solid var(--cd-accent2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-family: var(--cd-mono); color: var(--cd-accent2); font-weight: 700;">3</div>
+                        <div style="font-size: 0.8rem; font-family: var(--cd-mono);">Causal Comparison</div>
+                    </div>
+                    <div class="col d-flex align-items-center justify-content-center" style="color: var(--cd-border); font-size: 1.5rem;">→</div>
+                    <div class="col">
+                        <div style="width: 40px; height: 40px; background: rgba(0,212,255,0.1); border: 1px solid var(--cd-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-family: var(--cd-mono); color: var(--cd-accent); font-weight: 700;">4</div>
+                        <div style="font-size: 0.8rem; font-family: var(--cd-mono);">Store & Visualize</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+{% endblock %}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberDelay{% endblock %} | Cyberattack Detection Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --cd-bg: #080c14;
+            --cd-surface: #0d1421;
+            --cd-card: #111827;
+            --cd-border: #1e2d45;
+            --cd-accent: #00d4ff;
+            --cd-accent2: #7c3aed;
+            --cd-red: #ef4444;
+            --cd-orange: #f97316;
+            --cd-yellow: #f59e0b;
+            --cd-green: #22c55e;
+            --cd-text: #e2e8f0;
+            --cd-muted: #64748b;
+            --cd-mono: 'JetBrains Mono', monospace;
+            --cd-sans: 'Syne', sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--cd-bg);
+            color: var(--cd-text);
+            font-family: var(--cd-sans);
+            min-height: 100vh;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .content-wrapper { position: relative; z-index: 1; }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(8, 12, 20, 0.95) !important;
+            border-bottom: 1px solid var(--cd-border);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 0;
+        }
+
+        .navbar-brand {
+            font-family: var(--cd-mono);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--cd-accent) !important;
+            letter-spacing: 0.05em;
+        }
+
+        .navbar-brand span {
+            color: var(--cd-text);
+        }
+
+        .nav-link {
+            font-family: var(--cd-mono);
+            font-size: 0.8rem;
+            color: var(--cd-muted) !important;
+            letter-spacing: 0.05em;
+            padding: 0.5rem 1rem !important;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--cd-accent) !important;
+        }
+
+        .nav-link.active {
+            border-bottom: 2px solid var(--cd-accent);
+        }
+
+        /* Cards */
+        .cd-card {
+            background: var(--cd-card);
+            border: 1px solid var(--cd-border);
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .cd-card:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.05);
+        }
+
+        /* Stat cards */
+        .stat-card {
+            background: var(--cd-card);
+            border: 1px solid var(--cd-border);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .stat-card.accent::before { background: var(--cd-accent); }
+        .stat-card.danger::before { background: var(--cd-red); }
+        .stat-card.warning::before { background: var(--cd-yellow); }
+        .stat-card.success::before { background: var(--cd-green); }
+
+        .stat-value {
+            font-family: var(--cd-mono);
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--cd-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-family: var(--cd-mono);
+            margin-top: 0.25rem;
+        }
+
+        /* Buttons */
+        .btn-cyber {
+            background: linear-gradient(135deg, var(--cd-accent), #0099cc);
+            border: none;
+            color: #000;
+            font-family: var(--cd-mono);
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-cyber:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+            color: #000;
+        }
+
+        .btn-outline-cyber {
+            background: transparent;
+            border: 1px solid var(--cd-accent);
+            color: var(--cd-accent);
+            font-family: var(--cd-mono);
+            font-size: 0.85rem;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-outline-cyber:hover {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--cd-accent);
+        }
+
+        /* Risk badges */
+        .risk-badge {
+            font-family: var(--cd-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 0.2rem 0.6rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .risk-low { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .risk-medium { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .risk-high { background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
+        .risk-critical { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); animation: pulse-critical 2s infinite; }
+
+        @keyframes pulse-critical {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+        }
+
+        /* Form styles */
+        .form-control, .form-select {
+            background: var(--cd-surface) !important;
+            border: 1px solid var(--cd-border) !important;
+            color: var(--cd-text) !important;
+            font-family: var(--cd-mono);
+            font-size: 0.9rem;
+            border-radius: 4px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--cd-accent) !important;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15) !important;
+        }
+
+        .form-label {
+            font-family: var(--cd-mono);
+            font-size: 0.78rem;
+            color: var(--cd-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.4rem;
+        }
+
+        /* Table */
+        .cd-table {
+            font-family: var(--cd-mono);
+            font-size: 0.82rem;
+        }
+
+        .cd-table thead th {
+            background: var(--cd-surface);
+            color: var(--cd-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.7rem;
+            border-color: var(--cd-border);
+            padding: 0.75rem 1rem;
+        }
+
+        .cd-table tbody tr {
+            border-color: var(--cd-border);
+            transition: background 0.15s;
+        }
+
+        .cd-table tbody tr:hover {
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .cd-table tbody td {
+            border-color: var(--cd-border);
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+        }
+
+        /* Damage meter */
+        .damage-meter {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--cd-border);
+            overflow: hidden;
+        }
+
+        .damage-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        /* Section headers */
+        .section-tag {
+            font-family: var(--cd-mono);
+            font-size: 0.7rem;
+            color: var(--cd-accent);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Alert messages */
+        .messages-container .alert {
+            font-family: var(--cd-mono);
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--cd-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--cd-border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cd-muted); }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--cd-border);
+            padding: 1.5rem 0;
+            margin-top: 4rem;
+            font-family: var(--cd-mono);
+            font-size: 0.75rem;
+            color: var(--cd-muted);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="content-wrapper">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand" href="/">
+                    <i class="bi bi-shield-exclamation me-2"></i>CYBER<span>DELAY</span>
+                </a>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navMenu">
+                    <ul class="navbar-nav ms-auto gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="/">
+                                <i class="bi bi-house me-1"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'submit' %}active{% endif %}" href="/submit/">
+                                <i class="bi bi-plus-circle me-1"></i>New Incident
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" href="/history/">
+                                <i class="bi bi-table me-1"></i>History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="/dashboard/">
+                                <i class="bi bi-bar-chart-line me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/" target="_blank">
+                                <i class="bi bi-gear me-1"></i>Admin
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid px-4 py-3 messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% block content %}{% endblock %}
+
+        <footer>
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-shield-exclamation me-1" style="color:var(--cd-accent)"></i>CyberDelay — Causal Inference for Cyberattack Detection</span>
+                    <span>CD-CI@2026 · prernadivakar0328@gmail.com</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

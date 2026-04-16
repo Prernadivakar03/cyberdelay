@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}New Incident{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+
+            <div class="section-tag">// Incident Entry</div>
+            <h2 style="font-family: var(--cd-mono); font-weight: 700; margin-bottom: 0.5rem;">Log New Incident</h2>
+            <p style="color: var(--cd-muted); font-size: 0.9rem; margin-bottom: 2rem;">
+                Fill in the attack details below. The system will compute damage score, risk level, and counterfactual analysis automatically.
+            </p>
+
+            <form method="POST" id="incidentForm">
+                {% csrf_token %}
+                <div class="row g-4">
+
+                    <!-- Section 1: Attack Info -->
+                    <div class="col-12">
+                        <div class="cd-card p-4">
+                            <div class="section-tag mb-3">// 01 · Attack Information</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.attack_type.label }}</label>
+                                    {{ form.attack_type }}
+                                    {% if form.attack_type.errors %}<div class="text-danger mt-1" style="font-size:0.78rem;">{{ form.attack_type.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.attack_vector.label }}</label>
+                                    {{ form.attack_vector }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.data_sensitivity.label }}</label>
+                                    {{ form.data_sensitivity }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.affected_systems.label }}</label>
+                                    {{ form.affected_systems }}
+                                    {% if form.affected_systems.errors %}<div class="text-danger mt-1" style="font-size:0.78rem;">{{ form.affected_systems.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Detection & Environment -->
+                    <div class="col-12">
+                        <div class="cd-card p-4">
+                            <div class="section-tag mb-3">// 02 · Detection & Environment</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.detection_delay.label }}</label>
+                                    {{ form.detection_delay }}
+                                    {% if form.detection_delay.errors %}<div class="text-danger mt-1" style="font-size:0.78rem;">{{ form.detection_delay.errors }}</div>{% endif %}
+                                    <div style="font-size: 0.72rem; color: var(--cd-muted); margin-top: 0.3rem;">
+                                        Time from attack start to detection (0 = immediate)
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.server_load.label }}</label>
+                                    {{ form.server_load }}
+                                    {% if form.server_load.errors %}<div class="text-danger mt-1" style="font-size:0.78rem;">{{ form.server_load.errors }}</div>{% endif %}
+                                    <div style="font-size: 0.72rem; color: var(--cd-muted); margin-top: 0.3rem;">
+                                        CPU/resource load at time of attack (0–100%)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Defenses -->
+                    <div class="col-12">
+                        <div class="cd-card p-4">
+                            <div class="section-tag mb-3">// 03 · Defense Posture</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.patch_status.label }}</label>
+                                    {{ form.patch_status }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ form.firewall_status.label }}</label>
+                                    {{ form.firewall_status }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Notes -->
+                    <div class="col-12">
+                        <div class="cd-card p-4">
+                            <div class="section-tag mb-3">// 04 · Notes (Optional)</div>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="col-12">
+                        <div class="cd-card p-4" style="border-color: rgba(0,212,255,0.3);">
+                            <div class="section-tag mb-2">// Live Score Preview</div>
+                            <div style="font-size: 0.8rem; color: var(--cd-muted); margin-bottom: 1rem;">
+                                Estimated damage range based on selections (exact score computed server-side):
+                            </div>
+                            <div class="d-flex align-items-center gap-4">
+                                <div>
+                                    <div style="font-family: var(--cd-mono); font-size: 2rem; font-weight: 700; color: var(--cd-accent);" id="previewScore">--</div>
+                                    <div style="font-size: 0.7rem; color: var(--cd-muted); font-family: var(--cd-mono);">ESTIMATED SCORE</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div class="damage-meter">
+                                        <div class="damage-fill" id="previewBar" style="width: 0%; background: var(--cd-accent);"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="risk-badge" id="previewRisk" style="background: rgba(100,116,139,0.15); color: #64748b; border: 1px solid rgba(100,116,139,0.3);">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="col-12">
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-cyber px-5">
+                                <i class="bi bi-cpu me-2"></i>Analyze Incident
+                            </button>
+                            <a href="/" class="btn btn-outline-cyber">Cancel</a>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live preview calculation (rough client-side estimate)
+const SEVERITY = {ransomware:90,zero_day:88,insider_threat:75,mitm:68,sql_injection:65,ddos:60,phishing:55,brute_force:45};
+const PATCH_MULT = {patched:0.5,partial:0.75,unpatched:1.0};
+const FW_MOD = {strong:-15,moderate:-7,weak:5,none:18};
+const DATA_MULT = {public:0.6,internal:0.8,confidential:1.0,top_secret:1.3};
+
+function estimateScore() {
+    const attack = document.getElementById('id_attack_type').value;
+    const delay = parseFloat(document.getElementById('id_detection_delay').value) || 0;
+    const load = parseFloat(document.getElementById('id_server_load').value) || 50;
+    const patch = document.getElementById('id_patch_status').value;
+    const fw = document.getElementById('id_firewall_status').value;
+    const systems = parseInt(document.getElementById('id_affected_systems').value) || 1;
+    const dataSens = document.getElementById('id_data_sensitivity').value;
+
+    if (!attack) return;
+
+    const base = (SEVERITY[attack] || 60) * (PATCH_MULT[patch] || 1.0);
+    const delayImp = delay > 0 ? 18 * Math.log(1 + delay / 10) : 0;
+    const loadImp = (load / 100) * 15;
+    const sysImp = 8 * Math.log10(systems + 1);
+    const fwMod = FW_MOD[fw] || 0;
+    const dataMult = DATA_MULT[dataSens] || 1.0;
+    let raw = (base + delayImp + loadImp + sysImp + fwMod) * dataMult;
+    const score = Math.max(0, Math.min(100, raw));
+
+    document.getElementById('previewScore').textContent = score.toFixed(1);
+    const bar = document.getElementById('previewBar');
+    bar.style.width = score + '%';
+
+    let color, riskText, riskClass;
+    if (score < 30) { color = '#22c55e'; riskText = 'LOW'; riskClass = 'risk-low'; }
+    else if (score < 55) { color = '#f59e0b'; riskText = 'MEDIUM'; riskClass = 'risk-medium'; }
+    else if (score < 75) { color = '#f97316'; riskText = 'HIGH'; riskClass = 'risk-high'; }
+    else { color = '#ef4444'; riskText = 'CRITICAL'; riskClass = 'risk-critical'; }
+
+    bar.style.background = color;
+    document.getElementById('previewScore').style.color = color;
+    const riskEl = document.getElementById('previewRisk');
+    riskEl.textContent = riskText;
+    riskEl.className = 'risk-badge ' + riskClass;
+}
+
+['id_attack_type','id_detection_delay','id_server_load','id_patch_status',
+ 'id_firewall_status','id_affected_systems','id_data_sensitivity'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', estimateScore);
+    if (el) el.addEventListener('change', estimateScore);
+});
+</script>
+{% endblock %}

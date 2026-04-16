@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="section-tag">// Analytics Dashboard</div>
+    <h2 style="font-family: var(--cd-mono); font-weight: 700; margin-bottom: 1.5rem;">Security Intelligence</h2>
+
+    {% if no_data %}
+    <div class="cd-card p-5 text-center">
+        <i class="bi bi-bar-chart-line" style="font-size: 3rem; color: var(--cd-muted); display: block; margin-bottom: 1rem;"></i>
+        <div style="font-family: var(--cd-mono); color: var(--cd-muted); margin-bottom: 1rem;">
+            No incident data yet. Submit incidents to populate the dashboard.
+        </div>
+        <a href="/submit/" class="btn btn-cyber">Log First Incident</a>
+    </div>
+    {% else %}
+
+    <!-- KPI Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card accent">
+                <div class="stat-value" style="color: var(--cd-accent);">{{ total_incidents }}</div>
+                <div class="stat-label">Total Incidents</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card danger">
+                <div class="stat-value" style="color: var(--cd-red);">{{ critical_count }}</div>
+                <div class="stat-label">Critical Cases</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-value" style="color: var(--cd-yellow);">{{ avg_damage }}</div>
+                <div class="stat-label">Avg Damage Score</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card success">
+                <div class="stat-value" style="color: var(--cd-green);">{{ total_saved }}</div>
+                <div class="stat-label">Total Damage Saveable</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 1: Scatter + Risk Pie -->
+    <div class="row g-4 mb-4">
+
+        <!-- Delay vs Damage Scatter -->
+        <div class="col-lg-8">
+            <div class="cd-card p-4 h-100">
+                <div class="section-tag mb-1">// Detection Delay vs Damage Score</div>
+                <div style="font-size: 0.78rem; color: var(--cd-muted); margin-bottom: 1rem;">
+                    Each dot = one incident. Shows causal relationship between delay and damage.
+                </div>
+                <div style="position: relative; height: 280px;">
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Distribution Pie -->
+        <div class="col-lg-4">
+            <div class="cd-card p-4 h-100">
+                <div class="section-tag mb-1">// Risk Level Distribution</div>
+                <div style="font-size: 0.78rem; color: var(--cd-muted); margin-bottom: 1rem;">
+                    Breakdown of incident risk classifications.
+                </div>
+                <div style="position: relative; height: 240px;">
+                    <canvas id="riskPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Attack Frequency + Avg Damage by Type -->
+    <div class="row g-4 mb-4">
+
+        <!-- Attack Type Frequency -->
+        <div class="col-lg-6">
+            <div class="cd-card p-4 h-100">
+                <div class="section-tag mb-1">// Attack Type Frequency</div>
+                <div style="font-size: 0.78rem; color: var(--cd-muted); margin-bottom: 1rem;">
+                    Count of incidents per attack type.
+                </div>
+                <div style="position: relative; height: 240px;">
+                    <canvas id="attackFreqChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Damage by Attack Type -->
+        <div class="col-lg-6">
+            <div class="cd-card p-4 h-100">
+                <div class="section-tag mb-1">// Average Damage by Attack Type</div>
+                <div style="font-size: 0.78rem; color: var(--cd-muted); margin-bottom: 1rem;">
+                    Which attack types cause the most average damage.
+                </div>
+                <div style="position: relative; height: 240px;">
+                    <canvas id="avgDamageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Timeline -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="cd-card p-4">
+                <div class="section-tag mb-1">// Actual vs Counterfactual Damage Timeline</div>
+                <div style="font-size: 0.78rem; color: var(--cd-muted); margin-bottom: 1rem;">
+                    Blue = actual damage sustained. Green = damage if detected earlier (causal counterfactual). Gap = preventable damage.
+                </div>
+                <div style="position: relative; height: 260px;">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not no_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = 'JetBrains Mono';
+
+const GRID_COLOR = 'rgba(30,45,69,0.8)';
+
+// ---- 1. Scatter: Delay vs Damage ----
+const scatterRaw = {{ scatter_data|safe }};
+const riskColors = {low:'#22c55e', medium:'#f59e0b', high:'#f97316', critical:'#ef4444'};
+const scatterPoints = scatterRaw.map(d => ({
+    x: d.detection_delay,
+    y: d.damage_score,
+    risk: d.risk_level,
+    attack: d.attack_type,
+}));
+
+new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: {
+        datasets: [{
+            label: 'Incidents',
+            data: scatterPoints,
+            backgroundColor: scatterPoints.map(p => riskColors[p.risk] + 'cc'),
+            borderColor: scatterPoints.map(p => riskColors[p.risk]),
+            pointRadius: 7,
+            pointHoverRadius: 10,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            x: { title: {display:true, text:'Detection Delay (min)', color:'#64748b', font:{size:11}}, grid:{color:GRID_COLOR}, ticks:{color:'#64748b', font:{size:10}} },
+            y: { title: {display:true, text:'Damage Score', color:'#64748b', font:{size:11}}, grid:{color:GRID_COLOR}, ticks:{color:'#64748b', font:{size:10}}, min:0, max:100 }
+        },
+        plugins: {
+            legend: {display: false},
+            tooltip: {
+                backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1,
+                titleColor:'#e2e8f0', bodyColor:'#94a3b8',
+                callbacks: {
+                    label: ctx => {
+                        const p = ctx.raw;
+                        return [` Attack: ${p.attack.replace(/_/g,' ')}`, ` Delay: ${p.x}min`, ` Damage: ${p.y}`, ` Risk: ${p.risk}`];
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ---- 2. Risk Pie ----
+const riskLabels = {{ risk_labels|safe }};
+const riskValues = {{ risk_values|safe }};
+new Chart(document.getElementById('riskPieChart'), {
+    type: 'doughnut',
+    data: {
+        labels: riskLabels,
+        datasets: [{
+            data: riskValues,
+            backgroundColor: ['rgba(34,197,94,0.7)','rgba(245,158,11,0.7)','rgba(249,115,22,0.7)','rgba(239,68,68,0.7)'],
+            borderColor: ['#22c55e','#f59e0b','#f97316','#ef4444'],
+            borderWidth: 1,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: { position: 'bottom', labels: {color:'#94a3b8', font:{size:10}, boxWidth:12, padding:12} },
+            tooltip: {
+                backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1,
+                titleColor:'#e2e8f0', bodyColor:'#94a3b8',
+            }
+        }
+    }
+});
+
+// ---- 3. Attack Frequency Bar ----
+const attackLabels = {{ attack_labels|safe }};
+const attackValues = {{ attack_values|safe }};
+new Chart(document.getElementById('attackFreqChart'), {
+    type: 'bar',
+    data: {
+        labels: attackLabels,
+        datasets: [{
+            label: 'Count',
+            data: attackValues,
+            backgroundColor: 'rgba(0,212,255,0.2)',
+            borderColor: '#00d4ff',
+            borderWidth: 1,
+            borderRadius: 3,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        scales: {
+            x: { grid:{color:GRID_COLOR}, ticks:{color:'#64748b', font:{size:10}} },
+            y: { grid:{color:GRID_COLOR}, ticks:{color:'#94a3b8', font:{size:10}} }
+        },
+        plugins: {
+            legend: {display:false},
+            tooltip: { backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8' }
+        }
+    }
+});
+
+// ---- 4. Avg Damage by Type ----
+const avgLabels = {{ avg_labels|safe }};
+const avgValues = {{ avg_values|safe }};
+const avgColors = avgValues.map(v => v >= 75 ? 'rgba(239,68,68,0.7)' : v >= 55 ? 'rgba(249,115,22,0.7)' : v >= 30 ? 'rgba(245,158,11,0.7)' : 'rgba(34,197,94,0.7)');
+const avgBorders = avgValues.map(v => v >= 75 ? '#ef4444' : v >= 55 ? '#f97316' : v >= 30 ? '#f59e0b' : '#22c55e');
+new Chart(document.getElementById('avgDamageChart'), {
+    type: 'bar',
+    data: {
+        labels: avgLabels,
+        datasets: [{
+            label: 'Avg Damage',
+            data: avgValues,
+            backgroundColor: avgColors,
+            borderColor: avgBorders,
+            borderWidth: 1,
+            borderRadius: 3,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        scales: {
+            x: { min:0, max:100, grid:{color:GRID_COLOR}, ticks:{color:'#64748b', font:{size:10}} },
+            y: { grid:{color:GRID_COLOR}, ticks:{color:'#94a3b8', font:{size:10}} }
+        },
+        plugins: {
+            legend: {display:false},
+            tooltip: { backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8' }
+        }
+    }
+});
+
+// ---- 5. Timeline ----
+const tlLabels = {{ timeline_labels|safe }};
+const tlActual = {{ timeline_actual|safe }};
+const tlCf = {{ timeline_cf|safe }};
+new Chart(document.getElementById('timelineChart'), {
+    type: 'line',
+    data: {
+        labels: tlLabels,
+        datasets: [
+            {
+                label: 'Actual Damage',
+                data: tlActual,
+                borderColor: '#00d4ff',
+                backgroundColor: 'rgba(0,212,255,0.06)',
+                borderWidth: 2,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3,
+            },
+            {
+                label: 'Counterfactual (Earlier Detection)',
+                data: tlCf,
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34,197,94,0.06)',
+                borderWidth: 2,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3,
+                borderDash: [5, 4],
+            }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            x: { grid:{color:GRID_COLOR}, ticks:{color:'#64748b', font:{size:10}, maxRotation:45, minRotation:30} },
+            y: { min:0, max:100, grid:{color:GRID_COLOR}, ticks:{color:'#64748b', font:{size:10}} }
+        },
+        plugins: {
+            legend: { labels: {color:'#94a3b8', font:{size:10}, boxWidth:16, padding:12} },
+            tooltip: { backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8' }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
